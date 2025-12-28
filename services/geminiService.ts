@@ -43,7 +43,7 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
     2. **Macro_Level**: 搜尋 "台股加權指數 季線 乖離率" 或 "TWSE 60MA Bias"。
     3. **Topic_Score**: 該公司所屬產業 (如 CoWoS, Server) 的近期新聞熱度與社群情緒。
     4. **Chip_Flow**: 外資與投信近 5 日買賣超與本益比估值。
-    5. **Margin_Impact**: **請務必搜尋 "台股大盤 融資餘額" (TWSE Weighted Index Margin Balance)**。注意：此指標是指【加權指數】的市場總融資水位，代表全市場散戶信心，**絕非個別股票融資**。
+    5. **Margin_Impact**: 融資餘額變化率 vs 股價漲跌背離。
     6. **Technical**: RSI, MACD, 均線排列狀態。
     7. **Price**: **務必搜尋 "TPE:${stockCode} price" 取得最新股價與過去 10 日歷史股價**。
 
@@ -67,10 +67,9 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
        - 法人賣超或PE過高 -> <40分。
 
     4. **Margin Impact (15%權重) -> 填入 'margin'**:
-       - **定義**：大盤(加權指數)融資餘額水位 (Market-wide Retail Leverage)。
-       - 若大盤融資餘額**創高**或**大增** (散戶過度樂觀/籌碼凌亂) -> 風險高 -> 給予 **低分** (<40)。
-       - 若大盤融資餘額**大減**或**處於低檔** (散戶退場/籌碼沉澱) -> 機會大 -> 給予 **高分** (>75)。
-       - 融資水位平穩 -> 中性 (50-60分)。
+       - **重要性提升**：觀察散戶動向。
+       - 融資大增 (散戶進場/籌碼亂) -> 給予 **低分**。
+       - 融資減少 (散戶退場/籌碼穩) -> 給予 **高分**。
 
     5. **Technical (10%權重) -> 填入 'technical'**:
        - 多頭排列/均線向上/RSI強勢 -> >75分。
@@ -94,10 +93,9 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
     - 一句話定義目前該股的位階 (例如：底部起漲、高檔鈍化、反彈逃命、籌碼換手)。
 
     ### 2. 關鍵因子深度剖析 (Deep Dive)
-    - **VIX 逆勢解讀**: 結合目前的 VIX 指數，解釋為何現在是貪婪或恐慌的時刻？
-    - **大盤融資與散戶動向**: **重點分析「加權指數融資餘額」**的變化。目前散戶是瘋狂進場(大增)還是停損離場(大減)？這對操作有何暗示？
-    - **題材與產業動能**: 分析該公司題材 (Topic) 的"真實性"與"延續力"。
-    - **籌碼博弈**: 解析外資/投信的操作心態。
+    - **VIX 逆勢解讀**: 結合目前的 VIX 指數，解釋為何現在是貪婪或恐慌的時刻？這對該股有何影響？
+    - **題材與產業動能**: 分析該公司題材 (Topic) 的"真實性"與"延續力"。是短期炒作還是長線趨勢？
+    - **籌碼與融資博弈**: 解析外資/投信的操作心態，以及融資餘額(散戶)是否成為阻力？
 
     ### 3. 技術面與價位規劃 (Technical Analysis)
     - **型態判讀**: 目前是 W底、M頭、還是箱型整理？
@@ -106,7 +104,7 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
     ### 4. 10日操作策略建議 (Action Plan)
     - **進場策略**: 積極型與保守型投資人的進場點位建議。
     - **風控機制**: 設定明確的停損點 (Stop Loss) 與 獲利滿足點 (Take Profit)。
-    - **黑天鵝提示**: 需留意的潛在風險。
+    - **黑天鵝提示**: 需留意的潛在風險 (如匯率、財報、地緣政治)。
 
     **要求：語氣專業、犀利、數據導向。拒絕空泛的廢話，請直接引用 Step 2 的評分數據與 Step 1 的搜尋結果作為佐證。**
 
