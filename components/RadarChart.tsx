@@ -8,13 +8,14 @@ interface EightRadarChartProps {
 
 const EightRadarChart: React.FC<EightRadarChartProps> = ({ data }) => {
   // Transform data object to array for Recharts with the new 6 facets
+  // Updated Weights: Topic 25%, Chips 15%, VIX 25%, Margin 15%, Tech 10%, Macro 10%
   const chartData = [
-    { subject: '題材熱度 (30%)', A: data.topic.score, fullMark: 100 },
-    { subject: '籌碼面 (20%)', A: data.chips.score, fullMark: 100 },
-    { subject: 'S&P 500 VIX (20%)', A: data.vix.score, fullMark: 100 },
+    { subject: '題材熱度 (25%)', A: data.topic.score, fullMark: 100 },
+    { subject: '籌碼面 (15%)', A: data.chips.score, fullMark: 100 },
+    { subject: 'S&P 500 VIX (25%)', A: data.vix.score, fullMark: 100 },
     { subject: '技術面 (10%)', A: data.technical.score, fullMark: 100 },
     { subject: '大盤位階 (10%)', A: data.macro.score, fullMark: 100 },
-    { subject: '加權融資餘額 (10%)', A: data.margin.score, fullMark: 100 },
+    { subject: '加權融資餘額 (15%)', A: data.margin.score, fullMark: 100 },
   ];
 
   return (

@@ -7,12 +7,12 @@ interface FactorAnalysisGridProps {
 
 const FactorAnalysisGrid: React.FC<FactorAnalysisGridProps> = ({ data }) => {
   const facets: { key: keyof RadarMetrics; label: string; sub: string }[] = [
-    { key: 'topic', label: '題材熱度', sub: '30% (AI/Search)' },
-    { key: 'chips', label: '籌碼面', sub: '20% (法人)' },
-    { key: 'vix', label: '貪婪恐慌', sub: '20% (S&P 500 VIX)' },
-    { key: 'technical', label: '技術面', sub: '10% (MA/Trend)' },
-    { key: 'macro', label: '大盤位階', sub: '10% (TWSE)' },
-    { key: 'margin', label: '加權融資餘額', sub: '10% (大盤 Market)' },
+    { key: 'topic', label: '題材熱度', sub: '25% (AI/Search/Sentiment)' },
+    { key: 'chips', label: '籌碼面', sub: '15% (法人/估值)' },
+    { key: 'vix', label: '貪婪恐慌', sub: '25% (S&P 500 VIX Contrarian)' },
+    { key: 'technical', label: '技術面', sub: '10% (Trend/RSI/MACD)' },
+    { key: 'macro', label: '大盤位階', sub: '10% (Market Bias)' },
+    { key: 'margin', label: '加權融資餘額', sub: '15% (散戶指標 Margin)' },
   ];
 
   return (

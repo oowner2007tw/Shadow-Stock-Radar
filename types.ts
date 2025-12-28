@@ -1,3 +1,4 @@
+
 export interface RadarFacetDetail {
   score: number;
   reason: string;
@@ -6,11 +7,11 @@ export interface RadarFacetDetail {
 }
 
 export interface RadarMetrics {
-  topic: RadarFacetDetail;      // 題材熱度 (30%)
-  chips: RadarFacetDetail;      // 籌碼面 (20%)
-  vix: RadarFacetDetail;        // 貪婪恐慌 (20%)
-  technical: RadarFacetDetail;  // 技術面 (10%)
-  macro: RadarFacetDetail;      // 大盤位階 (10%)
+  topic: RadarFacetDetail;      // 題材熱度 (20%) + Sentiment (5%)
+  chips: RadarFacetDetail;      // 籌碼面 (15%) + Valuation (5%)
+  vix: RadarFacetDetail;        // VXTWN Contrarian (20%)
+  technical: RadarFacetDetail;  // 技術面 (5%)
+  macro: RadarFacetDetail;      // 大盤乖離 (20%)
   margin: RadarFacetDetail;     // 融資餘額 (10%)
 }
 

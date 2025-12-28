@@ -317,7 +317,7 @@ function App() {
                        系統架構與功能說明 (System Architecture)
                      </h2>
                      <p className="text-slate-400 mb-8 max-w-2xl leading-relaxed">
-                       本系統採用 **Hybrid AI + Machine Learning** 混合架構。結合 Google Gemini Pro 的定性分析能力 (Qualitative) 與 **Random Forest (隨機森林)** 的定量預測能力 (Quantitative)，提供比傳統技術分析更精準的趨勢預測。
+                       本系統採用 **Hybrid AI + Machine Learning** 混合架構。整合 Google Gemini 3 Flash 的知識圖譜分析能力，與 **8因子特徵工程 (8-Factor Quant)** 驅動的隨機森林模型，實現高勝率的個股趨勢預測。
                      </p>
 
                      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2 border-l-4 border-blue-500 pl-3">
@@ -337,30 +337,30 @@ function App() {
                          </thead>
                          <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
                            <tr className="hover:bg-slate-800/50 transition-colors">
-                             <td className="p-4 font-bold text-white">Market Data (股市數據)</td>
-                             <td className="p-4">Search Grounding</td>
+                             <td className="p-4 font-bold text-white">Market Data (即時數據)</td>
+                             <td className="p-4">Google Search Grounding</td>
                              <td className="p-4"><span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🟢 Real-time</span></td>
-                             <td className="p-4 text-slate-400">使用 Google Search 即時檢索最新股價、法人買賣超、VIX 與融資數據。</td>
+                             <td className="p-4 text-slate-400">即時檢索 VIX、加權季線乖離、融資餘額、三大法人買賣超等 8 大關鍵指標。</td>
                            </tr>
                            <tr className="hover:bg-slate-800/50 transition-colors">
-                             <td className="p-4 font-bold text-white">Stage A Model (方向)</td>
-                             <td className="p-4">Knowledge Graph Fusion</td>
-                             <td className="p-4"><span className="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🧠 AI + Logic</span></td>
+                             <td className="p-4 font-bold text-white">Feature Engineering (特徵工程)</td>
+                             <td className="p-4">8-Factor Quant Model</td>
+                             <td className="p-4"><span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">📐 Quantitative</span></td>
                              <td className="p-4 text-slate-400">
-                                <span className="text-emerald-400 font-bold">產業鏈關聯分析</span>：分析美股 (NVDA/AAPL) 與台股供應鏈連動性。
+                                整合 <span className="text-emerald-400">VIX 逆勢指標、乖離率(Macro)、籌碼(Chips)、技術(Tech)</span> 等權重，計算綜合量化分數。
                              </td>
                            </tr>
                            <tr className="hover:bg-slate-800/50 transition-colors">
-                             <td className="p-4 font-bold text-white">Stage B Model (勝率)</td>
-                             <td className="p-4">Contrarian Investing</td>
-                             <td className="p-4"><span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🔄 Algo Updated</span></td>
-                             <td className="p-4 text-slate-400">引入<span className="text-white font-bold">逆向思考</span>演算法。當市場過度擁擠時反向扣分，偵測軋空與主力出貨訊號。</td>
+                             <td className="p-4 font-bold text-white">Trend Prediction (趨勢預測)</td>
+                             <td className="p-4">Random Forest (10-Day)</td>
+                             <td className="p-4"><span className="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🌲 ML Forest</span></td>
+                             <td className="p-4 text-slate-400">基於歷史 60 日 K 線特徵與量化評分，透過隨機森林模型預測未來 10 日走勢 (Log Return)。</td>
                            </tr>
                            <tr className="hover:bg-slate-800/50 transition-colors">
-                             <td className="p-4 font-bold text-white">Price Prediction (預測)</td>
-                             <td className="p-4">Random Forest Regression</td>
-                             <td className="p-4"><span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🌲 ML Model</span></td>
-                             <td className="p-4 text-slate-400">取代舊版蒙地卡羅。將「AI雷達分數」與「歷史K線特徵」作為決策樹輸入，預測未來 60 日股價趨勢。</td>
+                             <td className="p-4 font-bold text-white">Decision Logic (決策層)</td>
+                             <td className="p-4">Bias Injection & Threshold</td>
+                             <td className="p-4"><span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">⚡ Logic Gate</span></td>
+                             <td className="p-4 text-slate-400">嚴格閾值控制：分數 >65 (Bullish) 加權多方飄移；分數 &lt;45 (Bearish) 觸發避險訊號。</td>
                            </tr>
                          </tbody>
                        </table>
@@ -379,7 +379,7 @@ function App() {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-white text-sm">Frontend Layer</h4>
-                                    <p className="text-xs text-slate-400 mt-1">React 19, Tailwind CSS, Recharts, Lucide Icons</p>
+                                    <p className="text-xs text-slate-400 mt-1">React 19, Tailwind CSS, Recharts (Dual-Line Chart)</p>
                                 </div>
                               </li>
                               <li className="flex items-start gap-4">
@@ -388,7 +388,7 @@ function App() {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-white text-sm">AI Core Layer</h4>
-                                    <p className="text-xs text-slate-400 mt-1">Gemini 2.5 Flash, Google Search Grounding Tool</p>
+                                    <p className="text-xs text-slate-400 mt-1">Gemini 3 Flash Preview, Search Grounding</p>
                                 </div>
                               </li>
                               <li className="flex items-start gap-4">
@@ -396,8 +396,8 @@ function App() {
                                     <Network className="h-5 w-5 text-purple-300" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-white text-sm">Logic Layer</h4>
-                                    <p className="text-xs text-slate-400 mt-1">Contrarian Strategy, Kelly Criterion, Random Forest Engine</p>
+                                    <h4 className="font-bold text-white text-sm">Quant Logic Layer</h4>
+                                    <p className="text-xs text-slate-400 mt-1">8-Factor Feature Engineering, Random Forest Regressor, Contrarian Strategy</p>
                                 </div>
                               </li>
                            </ul>
@@ -411,11 +411,11 @@ function App() {
                            <ul className="space-y-3 text-slate-400 text-sm">
                               <li className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                                <span>擴大知識圖譜至原物料與匯率市場</span>
+                                <span>擴大 Random Forest 訓練樣本至 1 年以上</span>
                               </li>
                               <li className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                                <span>整合總經數據 (CPI, Fed Rate) 進行多因子關聯</span>
+                                <span>整合期貨/選擇權籌碼 (Put/Call Ratio) 因子</span>
                               </li>
                               <li className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 bg-slate-500 rounded-full"></div>
