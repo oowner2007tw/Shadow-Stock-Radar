@@ -1,100 +1,85 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, SchemaType } from "@google/generative-ai";
 import { StockAnalysisResult, ThemeAnalysisResult, HotTopic, RadarMetrics } from "../types";
 import { predictWithForest } from "./forestService";
 
-// 初始化 Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+// 1. 初始化 Client
+const genAI = new GoogleGenAI(process.env.API_KEY || "");
 
-// 使用最新的 Gemini 1.5 Pro 或 Flash 預覽版以支援長文本生成
-const STOCK_MODEL = "gemini-1.5-pro"; 
+// 建議使用 Pro 等級模型以處理 800 字以上的深度分析報告
+const STOCK_MODEL = "gemini-1.5-pro";
 
 /**
- * 核心權重邏輯 (6-Factor Logic)
+ * 核心權重計算法 (6-Factor Logic)
  */
 const calculateWeightedScore = (radar: RadarMetrics): number => {
   return (
-    (radar.topic.score * 0.25) +    // 題材熱度 (25%)
-    (radar.chips.score * 0.15) +    // 籌碼面 (15%)
-    (radar.vix.score * 0.25) +      // VIX 指標 (25%)
-    (radar.margin.score * 0.15) +   // 融資餘額 (15%)
-    (radar.technical.score * 0.10) + // 技術面 (10%)
-    (radar.macro.score * 0.10)      // 大盤位階 (10%)
+    (radar.topic.score * 0.25) +
+    (radar.chips.score * 0.15) +
+    (radar.vix.score * 0.25) +
+    (radar.margin.score * 0.15) +
+    (radar.technical.score * 0.10) +
+    (radar.macro.score * 0.10)
   );
 };
 
 /**
- * 1. 深度個股分析 (含機構級 800 字報告)
+ * 【個股深度分析】產出 800 字機構報告與評分
  */
 export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAnalysisResult> => {
+  const model = genAI.getGenerativeModel({ 
+    model: STOCK_MODEL,
+    tools: [{ googleSearch: {} }] as any 
+  });
+
   const prompt = `
-    你是一位華爾街頂尖量化策略分析師 (Senior Quant Strategist)，擅長結合總體經濟、籌碼流向與技術心理分析。
+    你是一位華爾街頂尖量化策略分析師 (Senior Quant Strategist)，擅長分析台股與全球半導體供應鏈。
     標的：台灣股票代號 ${stockCode}。
 
-    請執行以下四個步驟，並最終產出一份 **【機構級深度投資分析報告】**。
+    任務：執行 10 日股價預測特徵工程與深度報告撰寫。
+    
+    【Step 1: 數據搜集】利用 Google Search 搜尋：VIX 指標、台股乖離率、${stockCode} 最新股價、歷史走勢、法人籌碼與融資狀況。
+    【Step 2: 6大因子量化評分】(0-100)。
+    【Step 3: 決策分類】>= 65 (Bullish), < 45 (Bearish)。
+    【Step 4: 機構級分析報告】撰寫至少 800 字繁體中文報告。結構包含：Executive Summary、Factor Deep Dive (因子深度解構)、Technical & Sentiment (技術與心理面)、Actionable Strategy (策略建議與黑天鵝風險)。
 
-    【Step 1: 即時數據搜集 (Data Gathering)】
-    請利用 Google Search 搜尋：
-    1. VIX 指標、台股加權指數與季線乖離率。
-    2. ${stockCode} 的最新股價、法人(外資/投信)近5日買賣超動向。
-    3. 融資餘額變化與股價之背離狀況。
-    4. 該個股所屬產業（如：CPO, CoWoS, BBU, SpaceX 供應鏈）之最新新聞與政策動向。
-
-    【Step 2: 量化評分 (0-100)】
-    根據搜尋結果，為 6 大因子評分，並嚴格遵守以下邏輯：
-    - VIX: >21 為恐慌(高分買進)；<16 為貪婪(低分預警)。
-    - Topic: 題材動能斜率向上、具備「轉折點」特徵則給予高分。
-    - Margin: 融資大增(散戶進場)給低分；融資洗盤完畢給高分。
-
-    【Step 3: 決策預測】
-    - 加權總分 >= 65: Bullish | < 45: Bearish | 45-65: Neutral。
-
-    【Step 4: 機構級深度分析報告 (Institutional Report)】
-    請撰寫一份 **至少 800 字以上** 的繁體中文報告，結構如下：
-    1. **Executive Summary (執行摘要)**：指出目前核心多空矛盾與最終投資評等。
-    2. **Factor Deep Dive (因子深度解構)**：剖析 VIX 與總經對該股的衝擊路徑；解讀法人與散戶籌碼的對抗狀態。
-    3. **Technical & Sentiment (技術與情緒面)**：分析關鍵壓力支撐（如跳空缺口、前高）與市場心理階段。
-    4. **Actionable Strategy (操作策略)**：具體的建倉建議、目標價區間、以及 3 個「黑天鵝風險」。
-
-    請務必以 JSON 格式回傳，確保 analysisReport 欄位內容詳實且長度充足。
+    請嚴格依照回傳 JSON 格式。
   `;
 
-  const response = await ai.models.generateContent({
-    model: STOCK_MODEL,
+  const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          symbol: { type: Type.STRING },
-          name: { type: Type.STRING },
-          price: { type: Type.NUMBER },
-          historicalPrices: { type: Type.ARRAY, items: { type: Type.NUMBER } },
+          symbol: { type: SchemaType.STRING },
+          name: { type: SchemaType.STRING },
+          price: { type: SchemaType.NUMBER },
+          historicalPrices: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER } },
           radarData: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-              topic: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
-              chips: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
-              vix: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
-              technical: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
-              macro: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
-              margin: { type: Type.OBJECT, properties: { score: { type: Type.NUMBER }, metricValue: { type: Type.STRING }, reason: { type: Type.STRING } } },
+              topic: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
+              chips: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
+              vix: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
+              technical: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
+              macro: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
+              margin: { type: SchemaType.OBJECT, properties: { score: { type: SchemaType.NUMBER }, metricValue: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } },
             },
             required: ["topic", "chips", "vix", "technical", "macro", "margin"]
           },
-          stageAPrediction: { type: Type.STRING, enum: ["Bullish", "Bearish", "Neutral"] },
-          stageBWinRate: { type: Type.NUMBER },
-          analysisReport: { type: Type.STRING },
+          stageAPrediction: { type: SchemaType.STRING },
+          stageBWinRate: { type: SchemaType.NUMBER },
+          analysisReport: { type: SchemaType.STRING },
         },
         required: ["symbol", "name", "price", "radarData", "stageAPrediction", "analysisReport"]
       }
-    },
-    tools: [{ googleSearch: {} }]
+    }
   });
 
-  const data = JSON.parse(response.response.text());
+  const data = JSON.parse(result.response.text());
 
-  // 處理歷史價格回測與 Random Forest 預測邏輯
+  // 預測邏輯處理
   let cleanHistory: number[] = data.historicalPrices || [];
   if (cleanHistory.length === 0) {
     const base = data.price || 100;
@@ -117,80 +102,81 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
 };
 
 /**
- * 2. 市場趨勢偵測 (Momentum Detection)
+ * 【市場趨勢偵測】搜尋具備向上動能的新興題材
  */
 export const detectMarketTrends = async (startDate: string, endDate: string): Promise<HotTopic[]> => {
-  const prompt = `分析台股在 ${startDate} 至 ${endDate} 間的趨勢動能，找出 4-6 個「斜率向上」的新興題材，而非老舊題材。`;
-  
-  const response = await ai.models.generateContent({
-    model: STOCK_MODEL,
+  const model = genAI.getGenerativeModel({ model: STOCK_MODEL, tools: [{ googleSearch: {} }] as any });
+
+  const prompt = `搜尋 ${startDate} 至 ${endDate} 期間，台股具備「正向動能斜率」的投資題材。排除老舊訊息，鎖定新技術或報價上漲題材。`;
+
+  const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: Type.ARRAY,
+        type: SchemaType.ARRAY,
         items: {
-          type: Type.OBJECT,
+          type: SchemaType.OBJECT,
           properties: {
-            name: { type: Type.STRING },
-            heatScore: { type: Type.NUMBER },
-            reason: { type: Type.STRING }
+            name: { type: SchemaType.STRING },
+            heatScore: { type: SchemaType.NUMBER },
+            reason: { type: SchemaType.STRING }
           },
           required: ["name", "heatScore", "reason"]
         }
       }
-    },
-    tools: [{ googleSearch: {} }]
+    }
   });
 
-  return JSON.parse(response.response.text());
+  return JSON.parse(result.response.text());
 };
 
 /**
- * 3. 題材拆解與影子股挖掘 (Shadow Stock Radar)
+ * 【題材影子股掃描】深度拆解供應鏈名單
  */
 export const analyzeThemeWithGemini = async (topic: string, startDate: string, endDate: string): Promise<ThemeAnalysisResult> => {
+  const model = genAI.getGenerativeModel({ model: STOCK_MODEL, tools: [{ googleSearch: {} }] as any });
+
   const prompt = `
-    針對 "${topic}" 題材進行台股供應鏈深度拆解。
-    重點：擴大搜尋「影子股 (Shadow Stocks)」。
-    TIER 3 分類必須包含那些「剛切入」、「送樣中」或「母憑子貴」的潛力標的。
+    深度拆解台股題材： "${topic}"。
+    請挖掘 TIER 1指標、TIER 2供應鏈與 TIER 3影子股。
+    重點：包含剛切入、低位階或具備子公司連動關係的影子標的。
   `;
 
-  const response = await ai.models.generateContent({
-    model: STOCK_MODEL,
+  const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: Type.OBJECT,
+        type: SchemaType.OBJECT,
         properties: {
-          topic: { type: Type.STRING },
-          temperature: { type: Type.NUMBER },
-          noiseLevel: { type: Type.STRING, enum: ["High", "Medium", "Low"] },
+          topic: { type: SchemaType.STRING },
+          temperature: { type: SchemaType.NUMBER },
+          noiseLevel: { type: SchemaType.STRING },
           supplyChain: {
-            type: Type.ARRAY,
+            type: SchemaType.ARRAY,
             items: {
-              type: Type.OBJECT,
+              type: SchemaType.OBJECT,
               properties: {
-                category: { type: Type.STRING, enum: ["上游", "中游", "下游"] },
-                companies: { type: Type.ARRAY, items: { type: Type.STRING } },
-                description: { type: Type.STRING }
+                category: { type: SchemaType.STRING },
+                companies: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+                description: { type: SchemaType.STRING }
               }
             }
           },
           leadingStocks: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-              tier1: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { symbol: { type: Type.STRING }, name: { type: Type.STRING }, reason: { type: Type.STRING } } } },
-              tier2: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { symbol: { type: Type.STRING }, name: { type: Type.STRING }, reason: { type: Type.STRING } } } },
-              tier3: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { symbol: { type: Type.STRING }, name: { type: Type.STRING }, reason: { type: Type.STRING } } } }
+              tier1: { type: SchemaType.ARRAY, items: { type: SchemaType.OBJECT, properties: { symbol: { type: SchemaType.STRING }, name: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } } },
+              tier2: { type: SchemaType.ARRAY, items: { type: SchemaType.OBJECT, properties: { symbol: { type: SchemaType.STRING }, name: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } } },
+              tier3: { type: SchemaType.ARRAY, items: { type: SchemaType.OBJECT, properties: { symbol: { type: SchemaType.STRING }, name: { type: SchemaType.STRING }, reason: { type: SchemaType.STRING } } } }
             }
           }
-        }
+        },
+        required: ["topic", "temperature", "leadingStocks"]
       }
-    },
-    tools: [{ googleSearch: {} }]
+    }
   });
 
-  return JSON.parse(response.response.text());
+  return JSON.parse(result.response.text());
 };
