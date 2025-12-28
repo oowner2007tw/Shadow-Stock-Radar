@@ -1,0 +1,5 @@
+{
+  "name": "Shadow Stock Radar",
+  "description": "High-win rate stock analysis system using Gemini AI, Google Search Grounding, and 8-Facet Radar technical analysis.",
+  "requestFramePermissions": []
+}
