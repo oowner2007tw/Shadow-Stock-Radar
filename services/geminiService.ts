@@ -84,30 +84,6 @@ export const analyzeStockWithGemini = async (stockCode: string): Promise<StockAn
     - 若加權總分 < 45：定義為「減碼/避險 (Bearish)」。
     - 45-65 之間：定義為「中性/盤整 (Neutral)」。
 
-    【Step 4: 生成深度分析報告 (Deep Analysis Report)】
-    請撰寫一份 **"專業法人級投資研究報告 (Institutional Research Report)"**，字數約 800~1200 字，結構需嚴謹且深入。
-    報告必須使用 Markdown 格式，並包含以下章節：
-
-    ### 1. 核心投資觀點 (Executive Summary)
-    - 結合 Random Forest 預測結果 (Bullish/Bearish) 與雷達總分進行定調。
-    - 一句話定義目前該股的位階 (例如：底部起漲、高檔鈍化、反彈逃命、籌碼換手)。
-
-    ### 2. 關鍵因子深度剖析 (Deep Dive)
-    - **VIX 逆勢解讀**: 結合目前的 VIX 指數，解釋為何現在是貪婪或恐慌的時刻？這對該股有何影響？
-    - **題材與產業動能**: 分析該公司題材 (Topic) 的"真實性"與"延續力"。是短期炒作還是長線趨勢？
-    - **籌碼與融資博弈**: 解析外資/投信的操作心態，以及融資餘額(散戶)是否成為阻力？
-
-    ### 3. 技術面與價位規劃 (Technical Analysis)
-    - **型態判讀**: 目前是 W底、M頭、還是箱型整理？
-    - **關鍵價位**: 明確給出預估的**支撐位 (Support)** 與 **壓力位 (Resistance)** 價格。
-
-    ### 4. 10日操作策略建議 (Action Plan)
-    - **進場策略**: 積極型與保守型投資人的進場點位建議。
-    - **風控機制**: 設定明確的停損點 (Stop Loss) 與 獲利滿足點 (Take Profit)。
-    - **黑天鵝提示**: 需留意的潛在風險 (如匯率、財報、地緣政治)。
-
-    **要求：語氣專業、犀利、數據導向。拒絕空泛的廢話，請直接引用 Step 2 的評分數據與 Step 1 的搜尋結果作為佐證。**
-
     回傳 JSON 格式。
   `;
 
