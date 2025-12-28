@@ -58,7 +58,7 @@ const EightRadarChart: React.FC<EightRadarChartProps> = ({ data }) => {
            <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
            因子深度量化解析 (Quantified Analysis)
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:gap-2">
+        <div className="grid grid-cols-1 gap-4 print:grid-cols-1 print:gap-4">
            {facets.map(({ key, label, sub }) => {
              const detail = data[key] as RadarFacetDetail;
              return (
