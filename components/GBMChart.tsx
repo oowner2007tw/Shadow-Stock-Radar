@@ -7,7 +7,8 @@ interface GBMChartProps {
 
 const GBMChart: React.FC<GBMChartProps> = ({ data }) => {
   return (
-    <div className="w-full h-[300px] bg-slate-900 rounded-xl p-4 border border-slate-700 shadow-lg mt-6 print:bg-white print:border-slate-200 print:shadow-none">
+    // Removed mt-6 to align with Radar Chart in the top row
+    <div className="w-full h-[350px] md:h-[400px] bg-slate-900 rounded-xl p-4 border border-slate-700 shadow-lg print:bg-white print:border-slate-200 print:shadow-none print:h-[300px]">
       <div className="flex flex-col items-center mb-4">
         <h3 className="text-blue-400 font-bold tracking-wider text-lg print:text-blue-700">Random Forest AI 趨勢預測</h3>
         <p className="text-xs text-slate-500 flex items-center gap-1 font-mono">

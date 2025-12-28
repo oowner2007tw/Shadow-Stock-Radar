@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Radar, Layers, Zap, Loader2, ArrowUpRight, ArrowDownRight, Activity, TrendingUp, BarChart3, Menu, Terminal, Clock, Info, Cpu, Database, Server, Code, Lock, Sparkles, Calendar, Network, Crown, TrendingDown, Target, Printer, FileText, BrainCircuit, CheckCircle } from 'lucide-react';
 import { analyzeStockWithGemini, analyzeThemeWithGemini, detectMarketTrends } from './services/geminiService';
 import EightRadarChart from './components/RadarChart';
+import FactorAnalysisGrid from './components/FactorAnalysisGrid';
 import GBMChart from './components/GBMChart';
 import ProcessingStatus from './components/ProcessingStatus';
 import AnalysisReport from './components/AnalysisReport';
@@ -500,13 +501,21 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Charts */}
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 print:block print:space-y-6">
-                     <div className="break-inside-avoid">
-                       <EightRadarChart data={stockResult.radarData} />
+                  {/* 
+                     NEW LAYOUT: 
+                     Row 1: Radar Chart (Left) + GBM Chart (Right) -> Balance top section
+                     Row 2: Factor Analysis Grid -> Full width bottom section 
+                  */}
+                  <div className="flex flex-col gap-6">
+                     {/* Top Section: Charts Side-by-Side */}
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2">
+                        <EightRadarChart data={stockResult.radarData} />
+                        <GBMChart data={stockResult.gbmSimulation} />
                      </div>
-                     <div className="break-inside-avoid print:mt-6">
-                       <GBMChart data={stockResult.gbmSimulation} />
+
+                     {/* Bottom Section: Detailed Analysis Grid (Full Width) */}
+                     <div className="break-inside-avoid">
+                        <FactorAnalysisGrid data={stockResult.radarData} />
                      </div>
                   </div>
 
