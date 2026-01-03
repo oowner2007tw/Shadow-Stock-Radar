@@ -360,7 +360,7 @@ function App() {
                              <td className="p-4 font-bold text-white">Decision Logic (決策層)</td>
                              <td className="p-4">Bias Injection & Threshold</td>
                              <td className="p-4"><span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">⚡ Logic Gate</span></td>
-                             <td className="p-4 text-slate-400">嚴格閾值控制：分數 >65 (Bullish) 加權多方飄移；分數 &lt;45 (Bearish) 觸發避險訊號。</td>
+                             <td className="p-4 text-slate-400">嚴格閾值控制：分數 &gt;65 (Bullish) 加權多方飄移；分數 &lt;45 (Bearish) 觸發避險訊號。</td>
                            </tr>
                          </tbody>
                        </table>
