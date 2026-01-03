@@ -12,6 +12,7 @@
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
             },
             colors: {
               slate: {
@@ -20,12 +21,20 @@
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out',
+              'shimmer': 'shimmer 1.5s infinite',
             },
             keyframes: {
               fadeIn: {
                 '0%': { opacity: '0', transform: 'translateY(10px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
               },
+              shimmer: {
+                '100%': { transform: 'translateX(100%)' },
+              },
+              marquee: {
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-50%)' },
+              }
             },
           },
         },
