@@ -15,7 +15,7 @@ const EightRadarChart: React.FC<EightRadarChartProps> = ({ data }) => {
     { subject: 'S&P 500 VIX (25%)', A: data.vix.score, fullMark: 100 },
     { subject: '技術面 (10%)', A: data.technical.score, fullMark: 100 },
     { subject: '大盤位階 (10%)', A: data.macro.score, fullMark: 100 },
-    { subject: '加權融資餘額 (15%)', A: data.margin.score, fullMark: 100 },
+    { subject: '大盤融資水位 (15%)', A: data.margin.score, fullMark: 100 },
   ];
 
   return (

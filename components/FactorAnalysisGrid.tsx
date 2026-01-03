@@ -12,7 +12,7 @@ const FactorAnalysisGrid: React.FC<FactorAnalysisGridProps> = ({ data }) => {
     { key: 'vix', label: '貪婪恐慌', sub: '25% (S&P 500 VIX Contrarian)' },
     { key: 'technical', label: '技術面', sub: '10% (Trend/RSI/MACD)' },
     { key: 'macro', label: '大盤位階', sub: '10% (Market Bias)' },
-    { key: 'margin', label: '加權融資餘額', sub: '15% (散戶指標 Margin)' },
+    { key: 'margin', label: '大盤融資水位', sub: '15% (Market Margin Balance)' },
   ];
 
   return (
