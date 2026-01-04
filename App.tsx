@@ -1,20 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Radar, Layers, Zap, Loader2, ArrowUpRight, ArrowDownRight, Activity, TrendingUp, BarChart3, Menu, Terminal, Clock, Info, Cpu, Database, Server, Code, Lock, Sparkles, Calendar, Network, Crown, TrendingDown, Target, Printer, FileText, BrainCircuit, CheckCircle } from 'lucide-react';
-import { analyzeStockWithGemini, analyzeThemeWithGemini, detectMarketTrends } from './services/geminiService';
+import { Search, Radar, Layers, Zap, Loader2, ArrowUpRight, ArrowDownRight, Activity, TrendingUp, BarChart3, Menu, Terminal, Clock, Info, Cpu, Database, Server, Code, Lock, Sparkles, Calendar, Network, Crown, TrendingDown, Target, Printer, FileText, BrainCircuit, CheckCircle, Globe, ArrowRightLeft } from 'lucide-react';
+import { analyzeStockWithGemini, analyzeThemeWithGemini, detectMarketTrends, analyzeCrossBorderRevenue } from './services/geminiService';
 import EightRadarChart from './components/RadarChart';
 import FactorAnalysisGrid from './components/FactorAnalysisGrid';
 import GBMChart from './components/GBMChart';
 import ProcessingStatus from './components/ProcessingStatus';
 import AnalysisReport from './components/AnalysisReport';
 import LoginScreen from './components/LoginScreen';
-import { AnalysisTab, StockAnalysisResult, ThemeAnalysisResult, HotTopic, TierStock } from './types';
+import RevenueArbitrage from './components/RevenueArbitrage';
+import { AnalysisTab, StockAnalysisResult, ThemeAnalysisResult, HotTopic, TierStock, ArbitrageResult } from './types';
 
 function App() {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [activeTab, setActiveTab] = useState<AnalysisTab>(AnalysisTab.INDIVIDUAL);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState(''); // Used for Stock/Theme
+  
+  // Arbitrage Inputs
+  const [usSymbol, setUsSymbol] = useState('');
+  const [twSymbol, setTwSymbol] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [detecting, setDetecting] = useState(false); // For auto-detect loading state
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +35,7 @@ function App() {
   
   const [stockResult, setStockResult] = useState<StockAnalysisResult | null>(null);
   const [themeResult, setThemeResult] = useState<ThemeAnalysisResult | null>(null);
+  const [arbitrageResult, setArbitrageResult] = useState<ArbitrageResult | null>(null);
   const [hotTopics, setHotTopics] = useState<HotTopic[]>([]);
 
   // Check if session is persisted (Optional simple check, normally managed by AuthService logic)
@@ -52,24 +59,32 @@ function App() {
       sessionStorage.removeItem('ssr_auth_session');
       setStockResult(null);
       setThemeResult(null);
+      setArbitrageResult(null);
       setInputValue('');
   };
 
   const handleSearch = async () => {
-    if (!inputValue.trim()) return;
-
     setLoading(true);
     setError(null);
     setStockResult(null);
     setThemeResult(null);
+    setArbitrageResult(null);
 
     try {
       if (activeTab === AnalysisTab.INDIVIDUAL) {
+        if (!inputValue.trim()) return;
         const result = await analyzeStockWithGemini(inputValue);
         setStockResult(result);
-      } else {
+      } else if (activeTab === AnalysisTab.THEME) {
+        if (!inputValue.trim()) return;
         const result = await analyzeThemeWithGemini(inputValue, startDate, endDate);
         setThemeResult(result);
+      } else if (activeTab === AnalysisTab.REVENUE_ARBITRAGE) {
+        if (!usSymbol.trim() || !twSymbol.trim()) {
+           throw new Error("請輸入美股與台股代號");
+        }
+        const result = await analyzeCrossBorderRevenue(usSymbol, twSymbol);
+        setArbitrageResult(result);
       }
     } catch (err: any) {
       setError(err.message || '分析失敗，請稍後再試。');
@@ -165,6 +180,18 @@ function App() {
                 <Layers className="h-5 w-5 mr-3" />
                 <span className="font-medium">題材影子 (Theme)</span>
             </button>
+            
+            <button
+                onClick={() => setActiveTab(AnalysisTab.REVENUE_ARBITRAGE)}
+                className={`w-full flex items-center px-4 py-3 rounded-xl transition-all ${
+                  activeTab === AnalysisTab.REVENUE_ARBITRAGE
+                    ? 'bg-purple-600/20 text-purple-400 border border-purple-600/30' 
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <Globe className="h-5 w-5 mr-3" />
+                <span className="font-medium">時差套利 (Arbitrage)</span>
+            </button>
 
             <button
                 onClick={() => setActiveTab(AnalysisTab.SYSTEM_INFO)}
@@ -208,12 +235,16 @@ function App() {
         <div className="flex-1 overflow-y-auto p-4 md:p-8 print:p-0 print:overflow-visible">
            
            {/* Top Search Area - Hidden on Print */}
-           {(activeTab === AnalysisTab.INDIVIDUAL || activeTab === AnalysisTab.THEME) && (
+           {activeTab !== AnalysisTab.SYSTEM_INFO && (
              <div className="max-w-5xl mx-auto mb-8 print:hidden">
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
-                  {activeTab === AnalysisTab.INDIVIDUAL ? 'AI 高勝率個股分析' : '熱門題材與供應鏈解析'}
+                  {activeTab === AnalysisTab.INDIVIDUAL && 'AI 高勝率個股分析'}
+                  {activeTab === AnalysisTab.THEME && '熱門題材與供應鏈解析'}
+                  {activeTab === AnalysisTab.REVENUE_ARBITRAGE && '時差套利者: 營收對帳系統'}
                 </h2>
                 
+                {/* Standard Search for Stock & Theme */}
+                {(activeTab === AnalysisTab.INDIVIDUAL || activeTab === AnalysisTab.THEME) && (
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-start">
                    {/* Input */}
                    <div className="flex-1 space-y-3">
@@ -290,6 +321,45 @@ function App() {
                       </div>
                    )}
                 </div>
+                )}
+
+                {/* DUAL INPUT For Arbitrage */}
+                {activeTab === AnalysisTab.REVENUE_ARBITRAGE && (
+                   <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800 flex flex-col md:flex-row gap-4 items-center">
+                      <div className="flex-1 w-full">
+                         <label className="text-xs text-slate-500 mb-1 block">美股代號 (US Ticker)</label>
+                         <input 
+                            type="text" 
+                            placeholder="e.g. NVDA, AAPL"
+                            value={usSymbol}
+                            onChange={(e) => setUsSymbol(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono"
+                         />
+                      </div>
+                      <div className="flex items-center justify-center pt-4">
+                         <ArrowRightLeft className="text-slate-500" />
+                      </div>
+                      <div className="flex-1 w-full">
+                         <label className="text-xs text-slate-500 mb-1 block">台股代號 (TW Ticker)</label>
+                         <input 
+                            type="text" 
+                            placeholder="e.g. 2330, 2317"
+                            value={twSymbol}
+                            onChange={(e) => setTwSymbol(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono"
+                         />
+                      </div>
+                      <div className="pt-4 w-full md:w-auto">
+                        <button 
+                            onClick={handleSearch}
+                            disabled={loading || !usSymbol || !twSymbol}
+                            className="w-full md:w-auto bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                            >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : '開始對帳'}
+                        </button>
+                      </div>
+                   </div>
+                )}
              </div>
            )}
 
@@ -298,7 +368,7 @@ function App() {
               
               {/* 1. Loading State */}
               {loading && (
-                 <ProcessingStatus target={inputValue} mode={activeTab as AnalysisTab.INDIVIDUAL | AnalysisTab.THEME} />
+                 <ProcessingStatus target={activeTab === AnalysisTab.REVENUE_ARBITRAGE ? `${usSymbol} vs ${twSymbol}` : inputValue} mode={activeTab} />
               )}
 
               {/* 2. Error State */}
@@ -357,10 +427,10 @@ function App() {
                              <td className="p-4 text-slate-400">基於歷史 60 日 K 線特徵與量化評分，透過隨機森林模型預測未來 10 日走勢 (Log Return)。</td>
                            </tr>
                            <tr className="hover:bg-slate-800/50 transition-colors">
-                             <td className="p-4 font-bold text-white">Decision Logic (決策層)</td>
-                             <td className="p-4">Bias Injection & Threshold</td>
-                             <td className="p-4"><span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">⚡ Logic Gate</span></td>
-                             <td className="p-4 text-slate-400">嚴格閾值控制：分數 &gt;65 (Bullish) 加權多方飄移；分數 &lt;45 (Bearish) 觸發避險訊號。</td>
+                             <td className="p-4 font-bold text-white">Revenue Arbitrage (時差套利)</td>
+                             <td className="p-4">Cross-Border Lag Analysis</td>
+                             <td className="p-4"><span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">🌎 Global</span></td>
+                             <td className="p-4 text-slate-400">比對美股財測與台股營收的時間差，捕捉未被市場反應的套利機會。</td>
                            </tr>
                          </tbody>
                        </table>
@@ -591,6 +661,11 @@ function App() {
                       ))}
                    </div>
                 </div>
+              )}
+
+              {/* 5. Revenue Arbitrage Results */}
+              {!loading && activeTab === AnalysisTab.REVENUE_ARBITRAGE && arbitrageResult && (
+                  <RevenueArbitrage data={arbitrageResult} />
               )}
            </div>
         </div>

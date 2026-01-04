@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { StockAnalysisResult, ThemeAnalysisResult, HotTopic, RadarMetrics } from "../types";
+import { StockAnalysisResult, ThemeAnalysisResult, HotTopic, RadarMetrics, ArbitrageResult, ArbitrageSignal } from "../types";
 import { predictWithForest } from "./forestService";
 
 // Initialize Gemini Client
@@ -318,4 +318,83 @@ export const analyzeThemeWithGemini = async (topic: string, startDate: string, e
   if (!text) throw new Error("No response from Gemini");
 
   return JSON.parse(text) as ThemeAnalysisResult;
+};
+
+// --- NEW FUNCTION: CROSS-BORDER REVENUE ARBITRAGE ---
+export const analyzeCrossBorderRevenue = async (usSymbol: string, twSymbol: string): Promise<ArbitrageResult> => {
+  const prompt = `
+    你是一個專門從事「台美股供應鏈時差套利」的頂尖避險基金經理人。
+    
+    【核心任務】：
+    比對 **美股公司 ${usSymbol} (客戶/終端)** 與 **台股公司 ${twSymbol} (供應鏈/代工)** 之間的「資訊時間差 (Time Lag)」。
+    
+    【邏輯推演】：
+    1. 台灣每月 10 號前公布上月營收。這是美股財報的「領先指標」。
+    2. 美股季報與財測 (Guidance) 是台股供應鏈下個月營收的「劇透」。
+    
+    【執行步驟】：
+    1. **搜集美股資訊**：搜尋 ${usSymbol} 最新的 Earnings Call Transcript, Guidance, CEO 言論。重點看：需求是強是弱？庫存狀況？
+    2. **搜集台股資訊**：搜尋 ${twSymbol} 最新的「月營收 (Monthly Revenue)」數據 (MoM, YoY)。
+    3. **異常檢測 (Anomaly Detection)**：
+       - 情況 A：美股 ${usSymbol} 說需求超好，但 ${twSymbol} 營收還沒動？ -> 潛在機會 (Opportunity)。
+       - 情況 B：台股 ${twSymbol} 營收大爆發，但 ${usSymbol} 尚未公布財報？ -> 預示美股財報驚喜 (Opportunity)。
+       - 情況 C：美股說好，但 ${twSymbol} 營收連續衰退？ -> 可能有人在說謊，或是訂單被轉單 (Trap)。
+    
+    【回傳要求】：
+    請分析這兩者的關聯，並給出「套利判決 (Verdict)」。
+    
+    JSON Schema 格式嚴格要求。
+  `;
+
+  const response = await ai.models.generateContent({
+    model: STOCK_MODEL,
+    contents: prompt,
+    config: {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          usSymbol: { type: Type.STRING },
+          twSymbol: { type: Type.STRING },
+          relationType: { type: Type.STRING, enum: ["US_LEADS_TW", "TW_LEADS_US", "MUTUAL"], description: "如果是美股財測先出影響台股，選 US_LEADS_TW。如果是台股營收先出預示美股，選 TW_LEADS_US。" },
+          leadTime: { type: Type.STRING, description: "預估的時間差，例如 '1-2 Months' 或 'Immediate'" },
+          usSide: {
+            type: Type.OBJECT,
+            properties: {
+              status: { type: Type.STRING, description: "簡短描述美股狀況，如 'Guidance Raised'"},
+              evidence: { type: Type.STRING, description: "具體證據，如 'CEO mentioned Blackwell demand is crazy'"},
+              trend: { type: Type.STRING, enum: ["UP", "DOWN", "FLAT"] }
+            },
+            required: ["status", "evidence", "trend"]
+          },
+          twSide: {
+            type: Type.OBJECT,
+            properties: {
+              status: { type: Type.STRING, description: "簡短描述台股營收狀況，如 'Revenue Historical High'"},
+              evidence: { type: Type.STRING, description: "具體數據，如 'Nov Revenue +30% YoY'"},
+              trend: { type: Type.STRING, enum: ["UP", "DOWN", "FLAT"] }
+            },
+            required: ["status", "evidence", "trend"]
+          },
+          verdict: {
+            type: Type.OBJECT,
+            properties: {
+              signal: { type: Type.STRING, enum: ["OPPORTUNITY", "TRAP", "SYNCED", "UNKNOWN"], description: "OPPORTUNITY=有未反應的利多/利空; TRAP=數據背離有鬼; SYNCED=已反應" },
+              score: { type: Type.NUMBER, description: "信心分數 0-100" },
+              analysis: { type: Type.STRING, description: "完整的套利邏輯分析 (Treasure Map)" },
+              strategy: { type: Type.STRING, description: "具體操作建議，例如 'Buy TW Calls' 或 'Short US Stock'" }
+            },
+            required: ["signal", "score", "analysis", "strategy"]
+          }
+        },
+        required: ["usSymbol", "twSymbol", "relationType", "leadTime", "usSide", "twSide", "verdict"]
+      }
+    }
+  });
+
+  const text = response.text;
+  if (!text) throw new Error("No response from Gemini");
+
+  return JSON.parse(text) as ArbitrageResult;
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, Circle, Loader2, Terminal, Server, Database, BrainCircuit, FileText, Network } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Terminal, Server, Database, BrainCircuit, FileText, Network, Globe, TrendingUp } from 'lucide-react';
 import { AnalysisTab } from '../types';
 
 interface ProcessingStatusProps {
@@ -23,9 +23,20 @@ const THEME_STEPS = [
   { text: "生成供應鏈解析報告", icon: FileText }
 ];
 
+const ARBITRAGE_STEPS = [
+  { text: "連接 SEC 財報資料庫 & 台股營收 API", icon: Globe },
+  { text: "解析美股財測 (Guidance) 與電話會議", icon: FileText },
+  { text: "分析台股供應鏈月營收趨勢 (MoM/YoY)", icon: TrendingUp },
+  { text: "計算 Lead Time 與 營收時間差", icon: Network },
+  { text: "偵測異常與生成尋寶地圖", icon: BrainCircuit }
+];
+
 const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ target, mode }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = mode === AnalysisTab.INDIVIDUAL ? STOCK_STEPS : THEME_STEPS;
+  
+  let steps = STOCK_STEPS;
+  if (mode === AnalysisTab.THEME) steps = THEME_STEPS;
+  else if (mode === AnalysisTab.REVENUE_ARBITRAGE) steps = ARBITRAGE_STEPS;
 
   useEffect(() => {
     setCurrentStep(0);
